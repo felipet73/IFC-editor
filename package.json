@@ -1,0 +1,29 @@
+{
+  "name": "three-editor-react",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "parity:runtime": "node scripts/runtime-parity-check.mjs"
+  },
+  "dependencies": {
+    "@syncfusion/ej2-base": "32.2.3",
+    "@syncfusion/ej2-react-buttons": "^32.2.3",
+    "@syncfusion/ej2-react-dropdowns": "^32.2.3",
+    "@syncfusion/ej2-react-inputs": "^32.2.3",
+    "@syncfusion/ej2-react-layouts": "^32.2.3",
+    "@syncfusion/ej2-react-navigations": "^32.2.3",
+    "@syncfusion/ej2-react-popups": "^32.2.3",
+    "@syncfusion/ej2-react-ribbon": "^32.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^5.4.11"
+  }
+}
