@@ -3,6 +3,7 @@ import { TreeViewComponent } from '@syncfusion/ej2-react-navigations';
 import { MoveObjectCommand } from '../editor/legacy/core/commands/MoveObjectCommand.js';
 
 const ROOT_ID = '__scene__';
+const SCENE_DOC_PREFIX = '__scene_doc__';
 
 function getNodeId(nodeData) {
   if (!nodeData) return '';
@@ -30,13 +31,38 @@ function toTreeNode(object) {
 }
 
 function toTreeData(editor) {
+  const documents = editor.getSceneDocuments?.() || [];
+  const fallbackSceneId = editor.activeSceneDocumentId || documents[0]?.id || 'default-scene-doc';
+
+  const resolveSceneId = (object) => {
+    const sceneId = object?.userData?.sceneDocumentId;
+    return sceneId || fallbackSceneId;
+  };
+
+  const groupedChildren = new Map();
+  for (const doc of documents) groupedChildren.set(doc.id, []);
+
+  for (const child of editor.scene.children) {
+    const sceneId = resolveSceneId(child);
+    if (!groupedChildren.has(sceneId)) groupedChildren.set(sceneId, []);
+    groupedChildren.get(sceneId).push(child);
+  }
+
+  const sceneChildren = documents.map((doc) => ({
+    id: `${SCENE_DOC_PREFIX}${doc.id}`,
+    name: doc.name || 'Scene',
+    icon: 'outliner-icon outliner-icon-group',
+    expanded: true,
+    children: (groupedChildren.get(doc.id) || []).map((child) => toTreeNode(child))
+  }));
+
   return [
     {
       id: ROOT_ID,
       name: editor.scene.name || 'Scene',
       icon: 'outliner-icon outliner-icon-root',
       expanded: true,
-      children: editor.scene.children.map((child) => toTreeNode(child))
+      children: sceneChildren
     }
   ];
 }
@@ -178,6 +204,12 @@ export const EditorOutlinerTree = memo(function EditorOutlinerTree({ editor, sce
       editor.select(editor.scene);
       return;
     }
+    if (id.startsWith(SCENE_DOC_PREFIX)) {
+      const sceneDocId = id.slice(SCENE_DOC_PREFIX.length);
+      editor.setActiveSceneDocumentMeta?.(sceneDocId);
+      setSelectedUuid(id);
+      return;
+    }
     const object = editor.objectByUuid(id);
     if (object) editor.select(object);
   };
@@ -185,6 +217,14 @@ export const EditorOutlinerTree = memo(function EditorOutlinerTree({ editor, sce
   const handleNodeDragStop = (args) => {
     const draggedId = getNodeId(args.draggedNodeData);
     const droppedId = getNodeId(args.droppedNodeData);
+    if (!draggedId || draggedId.startsWith(SCENE_DOC_PREFIX)) {
+      args.cancel = true;
+      return;
+    }
+    if (droppedId && droppedId.startsWith(SCENE_DOC_PREFIX)) {
+      args.cancel = true;
+      return;
+    }
     const draggedObject = editor.objectByUuid(draggedId);
     if (!draggedObject || !draggedObject.parent) return;
 

@@ -138,8 +138,11 @@ function Editor() {
 
 	this.viewportCamera = this.camera;
 	this.viewportShading = 'default';
+	this.sceneDocuments = [];
+	this.activeSceneDocumentId = null;
 
 	this.addCamera( this.camera );
+	this.ensureDefaultSceneDocumentMeta();
 
 }
 
@@ -168,6 +171,7 @@ Editor.prototype = {
 
 		}
 
+		this.ensureDefaultSceneDocumentMeta();
 		this.signals.sceneGraphChanged.active = true;
 		this.signals.sceneGraphChanged.dispatch();
 
@@ -564,6 +568,61 @@ Editor.prototype = {
 
 	},
 
+	getSceneDocuments: function () {
+
+		if ( !Array.isArray( this.sceneDocuments ) ) this.sceneDocuments = [];
+		return this.sceneDocuments;
+
+	},
+
+	ensureDefaultSceneDocumentMeta: function () {
+
+		if ( !Array.isArray( this.sceneDocuments ) ) this.sceneDocuments = [];
+
+		if ( this.sceneDocuments.length === 0 ) {
+
+			this.sceneDocuments.push( {
+				id: THREE.MathUtils.generateUUID(),
+				name: 'Scene 1',
+				sourceType: 'native'
+			} );
+
+		}
+
+		if ( !this.activeSceneDocumentId ) {
+
+			this.activeSceneDocumentId = this.sceneDocuments[ 0 ].id;
+
+		}
+
+	},
+
+	setActiveSceneDocumentMeta: function ( id ) {
+
+		if ( !id ) return;
+		const docs = this.getSceneDocuments();
+		const exists = docs.some( ( doc ) => doc.id === id );
+		if ( !exists ) return;
+		this.activeSceneDocumentId = id;
+		this.signals.sceneGraphChanged.dispatch();
+
+	},
+
+	createSceneDocumentMeta: function ( name = null, sourceType = 'native' ) {
+
+		const docs = this.getSceneDocuments();
+		const next = {
+			id: THREE.MathUtils.generateUUID(),
+			name: name || `Scene ${docs.length + 1}`,
+			sourceType
+		};
+		docs.push( next );
+		if ( !this.activeSceneDocumentId ) this.activeSceneDocumentId = next.id;
+		this.signals.sceneGraphChanged.dispatch();
+		return next;
+
+	},
+
 	//
 
 	select: function ( object ) {
@@ -655,11 +714,14 @@ Editor.prototype = {
 		this.scripts = {};
 		this.timelineState = null;
 		this.timelineStateVersion ++;
+		this.sceneDocuments = [];
+		this.activeSceneDocumentId = null;
 
 		this.materialsRefCounter.clear();
 
 		this.animations = {};
 		this.mixer.stopAllAction();
+		this.ensureDefaultSceneDocumentMeta();
 
 		this.deselect();
 
@@ -696,6 +758,9 @@ Editor.prototype = {
 		this.scripts = json.scripts;
 		this.timelineState = json.project?.timeline ? JSON.parse( JSON.stringify( json.project.timeline ) ) : null;
 		this.timelineStateVersion ++;
+		this.sceneDocuments = Array.isArray( json.project?.sceneDocuments ) ? JSON.parse( JSON.stringify( json.project.sceneDocuments ) ) : [];
+		this.activeSceneDocumentId = json.project?.activeSceneDocumentId || null;
+		this.ensureDefaultSceneDocumentMeta();
 
 		this.setScene( await loader.parseAsync( json.scene ) );
 
@@ -748,6 +813,8 @@ Editor.prototype = {
 				shadowType: this.config.getKey( 'project/renderer/shadowType' ),
 				toneMapping: this.config.getKey( 'project/renderer/toneMapping' ),
 				toneMappingExposure: this.config.getKey( 'project/renderer/toneMappingExposure' ),
+				sceneDocuments: this.getSceneDocuments(),
+				activeSceneDocumentId: this.activeSceneDocumentId,
 				timeline: this.timelineState ? JSON.parse( JSON.stringify( this.timelineState ) ) : undefined
 			},
 			camera: this.viewportCamera.toJSON(),

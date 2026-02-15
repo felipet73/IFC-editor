@@ -279,6 +279,10 @@ export function EditorMenubar({ editor, selected, historyVersion, savingStatus }
     editor.execute(new AddObjectCommand(editor, group));
   };
 
+  const handleAddSceneMeta = () => {
+    editor.createSceneDocumentMeta?.();
+  };
+
   const handleAddMesh = () => {
     const object = createMesh(meshTypeRef.current);
     if (!object) return;
@@ -454,6 +458,10 @@ export function EditorMenubar({ editor, selected, historyVersion, savingStatus }
             collections: [
               {
                 items: [
+                  {
+                    type: RibbonItemType.Button,
+                    buttonSettings: { content: 'Add Scene', iconCss: 'e-icons e-circle-add', clicked: handleAddSceneMeta }
+                  },
                   {
                     type: RibbonItemType.Button,
                     buttonSettings: { content: 'Add Group', iconCss: 'e-icons e-group-2', clicked: handleAddGroup }
