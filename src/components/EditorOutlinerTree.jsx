@@ -32,7 +32,7 @@ function toTreeNode(object) {
 
 function toTreeData(editor) {
   const documents = editor.getSceneDocuments?.() || [];
-  const fallbackSceneId = editor.activeSceneDocumentId || documents[0]?.id || 'default-scene-doc';
+  const fallbackSceneId = documents[0]?.id || 'default-scene-doc';
 
   const resolveSceneId = (object) => {
     const sceneId = object?.userData?.sceneDocumentId;

@@ -595,6 +595,19 @@ Editor.prototype = {
 
 		}
 
+		const primarySceneId = this.sceneDocuments[ 0 ].id;
+		for ( let i = 0; i < this.scene.children.length; i ++ ) {
+
+			const child = this.scene.children[ i ];
+			if ( !child.userData ) child.userData = {};
+			if ( !child.userData.sceneDocumentId ) {
+
+				child.userData.sceneDocumentId = primarySceneId;
+
+			}
+
+		}
+
 	},
 
 	setActiveSceneDocumentMeta: function ( id ) {
